@@ -28,7 +28,7 @@ import androidx.annotation.Px
  * properties and provides methods to draw the layout on a [Canvas].
  *
  * NOTE: Currently, this API leverages a platform feature introduced in API 36 (Android 16). On
- * older API levels, it falls back to horizontal text layout.
+ * older API levels, it falls back to a no-op.
  */
 public class VerticalTextLayout
 /**
@@ -52,6 +52,10 @@ constructor(
     @get:Px
     public val width: Float
         get() = impl.width
+
+    /** The number of lines (columns) in this vertical text layout. */
+    public val lineCount: Int
+        get() = impl.lineCount
 
     internal val impl: VerticalTextLayoutImpl
 
