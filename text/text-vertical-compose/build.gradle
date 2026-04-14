@@ -35,14 +35,14 @@ androidx {
 }
 
 dependencies {
-    api project(':text:text-vertical')
+    api(project(":text:text-vertical"))
 
-    api 'androidx.compose.ui:ui:1.7.8'
-    api 'androidx.compose.ui:ui-graphics:1.7.8'
-    api 'androidx.compose.ui:ui-text:1.7.8'
-    api 'androidx.compose.runtime:runtime:1.7.8'
+    api("androidx.compose.ui:ui:1.7.8")
+    api("androidx.compose.ui:ui-graphics:1.7.8")
+    api("androidx.compose.ui:ui-text:1.7.8")
+    api("androidx.compose.runtime:runtime:1.7.8")
 
-    androidTestImplementation('androidx.activity:activity-compose:1.8.2')
+    androidTestImplementation("androidx.activity:activity-compose:1.8.2")
     androidTestImplementation(libs.testExtJunit)
     androidTestImplementation(libs.testCore)
     androidTestImplementation(libs.testRules)

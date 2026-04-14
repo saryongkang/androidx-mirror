@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.test.filters.SdkSuppress
 import com.google.common.truth.Truth.assertThat
@@ -81,10 +82,26 @@ class TextStyleConversionTest {
     }
 
     @Test
-    fun toTextPaint_letterSpacing() {
-        val style = TextStyle(letterSpacing = 0.5.sp)
+    fun toTextPaint_letterSpacing_em() {
+        val style = TextStyle(letterSpacing = 0.5.em)
         val paint = style.toTextPaint(density)
         assertThat(paint.letterSpacing).isEqualTo(0.5f)
+    }
+
+    @Test
+    fun toTextPaint_letterSpacing_sp() {
+        // fontSize=16sp = 32px (density 2), letterSpacing=1.6sp = 3.2px
+        // em = 3.2 / 32 = 0.1
+        val style = TextStyle(fontSize = 16.sp, letterSpacing = 1.6.sp)
+        val paint = style.toTextPaint(density)
+        assertThat(paint.letterSpacing).isEqualTo(0.1f)
+    }
+
+    @Test
+    fun toTextPaint_letterSpacing_sp_withoutFontSize_defaultsToZero() {
+        val style = TextStyle(letterSpacing = 0.5.sp)
+        val paint = style.toTextPaint(density)
+        assertThat(paint.letterSpacing).isEqualTo(0f)
     }
 
     @Test

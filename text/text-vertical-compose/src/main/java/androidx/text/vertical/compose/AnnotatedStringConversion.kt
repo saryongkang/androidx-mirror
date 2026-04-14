@@ -19,11 +19,13 @@ package androidx.text.vertical.compose
 import android.graphics.Typeface
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.TextPaint
 import android.text.style.AbsoluteSizeSpan
 import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import android.text.style.MetricAffectingSpan
 import android.text.style.StrikethroughSpan
+import android.text.style.StyleSpan
 import android.text.style.UnderlineSpan
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.toArgb
@@ -33,12 +35,16 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
 
-internal fun AnnotatedString.toSpanned(density: Density): Spanned {
+internal fun AnnotatedString.toSpanned(
+    density: Density,
+    baseFontSize: TextUnit = TextUnit.Unspecified,
+): Spanned {
     val sb = SpannableStringBuilder(text)
     for (range in spanStyles) {
-        applySpanStyle(sb, range.item, range.start, range.end, density)
+        applySpanStyle(sb, range.item, range.start, range.end, density, baseFontSize)
     }
     return sb
 }
@@ -49,8 +55,9 @@ private fun applySpanStyle(
     start: Int,
     end: Int,
     density: Density,
+    baseFontSize: TextUnit,
 ) {
-    val flag = Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+    val flag = Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
 
     if (style.color.isSpecified) {
         sb.setSpan(ForegroundColorSpan(style.color.toArgb()), start, end, flag)
@@ -71,7 +78,7 @@ private fun applySpanStyle(
                 italic -> Typeface.ITALIC
                 else -> Typeface.NORMAL
             }
-        sb.setSpan(android.text.style.StyleSpan(typefaceStyle), start, end, flag)
+        sb.setSpan(StyleSpan(typefaceStyle), start, end, flag)
     }
 
     if (style.background.isSpecified) {
@@ -88,16 +95,38 @@ private fun applySpanStyle(
     }
 
     if (style.letterSpacing.isSpecified) {
-        sb.setSpan(LetterSpacingSpan(style.letterSpacing.value), start, end, flag)
+        val letterSpacing =
+            when {
+                style.letterSpacing.isEm -> style.letterSpacing.value
+                style.letterSpacing.isSp -> {
+                    // Convert sp to em using the effective font size (span's own, else base).
+                    val effectiveFontSize =
+                        if (style.fontSize.isSpecified) style.fontSize else baseFontSize
+                    if (effectiveFontSize.isSpecified) {
+                        with(density) { style.letterSpacing.toPx() / effectiveFontSize.toPx() }
+                    } else {
+                        null
+                    }
+                }
+                else -> null
+            }
+        if (letterSpacing != null) {
+            sb.setSpan(LetterSpacingSpan(letterSpacing), start, end, flag)
+        }
     }
 }
 
-internal class LetterSpacingSpan(private val letterSpacing: Float) : MetricAffectingSpan() {
-    override fun updateMeasureState(textPaint: android.text.TextPaint) {
-        textPaint.letterSpacing = letterSpacing
+/**
+ * A span that applies letter spacing to the affected text range.
+ *
+ * @property value The letter spacing to apply, expressed in em units (relative to the font size).
+ */
+internal class LetterSpacingSpan(private val value: Float) : MetricAffectingSpan() {
+    override fun updateMeasureState(textPaint: TextPaint) {
+        textPaint.letterSpacing = value
     }
 
-    override fun updateDrawState(tp: android.text.TextPaint) {
-        tp.letterSpacing = letterSpacing
+    override fun updateDrawState(tp: TextPaint) {
+        tp.letterSpacing = value
     }
 }

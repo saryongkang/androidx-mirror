@@ -16,6 +16,7 @@
 
 package androidx.text.vertical.compose
 
+import android.text.TextPaint
 import android.text.style.AbsoluteSizeSpan
 import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -129,13 +131,55 @@ class AnnotatedStringConversionTest {
     }
 
     @Test
-    fun toSpanned_letterSpacing() {
+    fun toSpanned_letterSpacing_em() {
         val annotated = buildAnnotatedString {
-            withStyle(SpanStyle(letterSpacing = 0.3.sp)) { append("spaced") }
+            withStyle(SpanStyle(letterSpacing = 0.3.em)) { append("spaced") }
         }
         val spanned = annotated.toSpanned(density)
         val spans = spanned.getSpans(0, 6, LetterSpacingSpan::class.java)
         assertThat(spans).hasLength(1)
+        val paint = TextPaint()
+        spans[0].updateMeasureState(paint)
+        assertThat(paint.letterSpacing).isEqualTo(0.3f)
+    }
+
+    @Test
+    fun toSpanned_letterSpacing_sp_withSpanFontSize() {
+        // SpanStyle fontSize=16sp = 32px (density 2), letterSpacing=1.6sp = 3.2px
+        // em = 3.2 / 32 = 0.1
+        val annotated = buildAnnotatedString {
+            withStyle(SpanStyle(fontSize = 16.sp, letterSpacing = 1.6.sp)) { append("spaced") }
+        }
+        val spanned = annotated.toSpanned(density)
+        val spans = spanned.getSpans(0, 6, LetterSpacingSpan::class.java)
+        assertThat(spans).hasLength(1)
+        val paint = TextPaint()
+        spans[0].updateMeasureState(paint)
+        assertThat(paint.letterSpacing).isEqualTo(0.1f)
+    }
+
+    @Test
+    fun toSpanned_letterSpacing_sp_withBaseFontSize() {
+        // baseFontSize=16sp = 32px, letterSpacing=1.6sp = 3.2px; em = 3.2 / 32 = 0.1
+        val annotated = buildAnnotatedString {
+            withStyle(SpanStyle(letterSpacing = 1.6.sp)) { append("spaced") }
+        }
+        val spanned = annotated.toSpanned(density, baseFontSize = 16.sp)
+        val spans = spanned.getSpans(0, 6, LetterSpacingSpan::class.java)
+        assertThat(spans).hasLength(1)
+        val paint = TextPaint()
+        spans[0].updateMeasureState(paint)
+        assertThat(paint.letterSpacing).isEqualTo(0.1f)
+    }
+
+    @Test
+    fun toSpanned_letterSpacing_sp_withoutFontSize_skipsSpan() {
+        val annotated = buildAnnotatedString {
+            withStyle(SpanStyle(letterSpacing = 1.6.sp)) { append("spaced") }
+        }
+        val spanned = annotated.toSpanned(density)
+        val spans = spanned.getSpans(0, 6, LetterSpacingSpan::class.java)
+        assertThat(spans).isEmpty()
     }
 
     @Test

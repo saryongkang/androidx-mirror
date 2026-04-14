@@ -29,12 +29,13 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.isSpecified
 
 internal fun TextStyle.toTextPaint(density: Density): TextPaint {
-    val paint = TextPaint().apply {
-        isAntiAlias = true
-        if (fontSize.isSpecified) {
-            textSize = with(density) { fontSize.toPx() }
+    val paint =
+        TextPaint().apply {
+            isAntiAlias = true
+            if (fontSize.isSpecified) {
+                textSize = with(density) { fontSize.toPx() }
+            }
         }
-    }
 
     if (color.isSpecified) {
         paint.color = color.toArgb()
@@ -52,7 +53,17 @@ internal fun TextStyle.toTextPaint(density: Density): TextPaint {
     paint.typeface = Typeface.create(Typeface.DEFAULT, typefaceStyle)
 
     if (letterSpacing.isSpecified) {
-        paint.letterSpacing = letterSpacing.value
+        paint.letterSpacing =
+            when {
+                letterSpacing.isEm -> letterSpacing.value
+                letterSpacing.isSp && fontSize.isSpecified -> {
+                    // Convert sp to em using the font size: em = sp_in_px / fontSize_in_px
+                    val spInPx = with(density) { letterSpacing.toPx() }
+                    val fontSizeInPx = with(density) { fontSize.toPx() }
+                    spInPx / fontSizeInPx
+                }
+                else -> 0f
+            }
     }
 
     textDecoration?.let { decoration ->
