@@ -57,7 +57,6 @@ import androidx.compose.ui.unit.sp
 import androidx.text.vertical.EmphasisStyle
 import androidx.text.vertical.VerticalTextLayout
 import java.util.Locale
-import kotlin.math.max
 
 class VerticalTextSampleActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -79,7 +78,10 @@ class VerticalTextSampleActivity : ComponentActivity() {
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                 Column(modifier = Modifier.padding(innerPadding)) {
                     var selectedTabIndex by remember { mutableIntStateOf(0) }
-                    PrimaryTabRow(selectedTabIndex = 0, modifier = Modifier.fillMaxWidth()) {
+                    PrimaryTabRow(
+                        selectedTabIndex = selectedTabIndex,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
                         demos.forEachIndexed { index, (title, _) ->
                             Tab(
                                 selected = selectedTabIndex == index,
@@ -125,8 +127,8 @@ fun ZoomableVerticalText(content: @Composable (TextPaint) -> Unit) {
                 }
                 .pointerInput(Unit) {
                     detectTransformGestures { _, offsetChange, gestureZoom, _ ->
-                        zoom = zoom * gestureZoom
-                        offsetX = max(0f, offsetX + offsetChange.x)
+                        zoom = (zoom * gestureZoom).coerceIn(0.25f, 10f)
+                        offsetX += offsetChange.x
                     }
                 }
                 .graphicsLayer(translationX = offsetX)
@@ -213,7 +215,7 @@ fun makeSampleText() = buildVerticalText {
     text("掌の上で少し落ちついて書生の顔を見たのがいわゆる人間というものの見始であろう。", mapOf("見始" to "みはじめ"))
     text("この時妙なものだと思った感じが今でも残っている。")
     text("第一毛をもって装飾されべきはずの顔がつるつるしてまるで薬缶だ。", mapOf("薬缶" to "やかん"))
-    text("その後猫にもだいぶ逢ったがこんな片輪には一度も出会わした事がない。", mapOf("片端" to "かたわ", "出会" to "でく"))
+    text("その後猫にもだいぶ逢ったがこんな片輪には一度も出会わした事がない。", mapOf("片輪" to "かたわ", "出会" to "でく"))
     text("のみならず顔の真中があまりに突起している。")
     text("そうしてその穴の中から時々ぷうぷうと煙を吹く。", mapOf("煙" to "けむり"))
     text("どうも咽せぽくて実に弱った。", mapOf("咽" to "む"))
