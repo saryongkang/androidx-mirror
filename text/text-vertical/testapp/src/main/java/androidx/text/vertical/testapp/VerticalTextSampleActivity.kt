@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.text.vertical.EmphasisStyle
 import androidx.text.vertical.compose.VerticalText
+import androidx.text.vertical.compose.buildVerticalText
 import java.util.Locale
 
 class VerticalTextSampleActivity : ComponentActivity() {

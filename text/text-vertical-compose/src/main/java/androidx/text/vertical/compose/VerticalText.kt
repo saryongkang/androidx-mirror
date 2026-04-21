@@ -49,7 +49,7 @@ import kotlin.math.min
  * NOTE: Vertical text layout requires API 36 (Android 16). On older API levels, nothing is
  * rendered.
  *
- * @param text The [Spanned] text to display.
+ * @param text The [CharSequence] text to display.
  * @param paint The [TextPaint] to use for text measurement and rendering.
  * @param modifier The [Modifier] to apply to the layout.
  * @param overflow How to handle text that overflows the available space.
@@ -59,7 +59,7 @@ import kotlin.math.min
  */
 @Composable
 public fun VerticalText(
-    text: Spanned,
+    text: CharSequence,
     paint: TextPaint,
     modifier: Modifier = Modifier,
     overflow: TextOverflow = TextOverflow.Clip,
