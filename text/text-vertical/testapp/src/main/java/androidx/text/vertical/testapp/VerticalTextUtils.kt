@@ -37,19 +37,17 @@ import androidx.text.vertical.TextOrientationSpan
 
 const val SPAN_FLAG = Spanned.SPAN_INCLUSIVE_EXCLUSIVE
 
-class VerticalTextBuilder {
-    @Composable
-    fun Sideways(text: CharSequence) = withSpan(TextOrientationSpan.Sideways(), { this.text(text) })
+class VerticalTextBuilder(val density: Density) {
+    internal val result = SpannableStringBuilder()
 
-    @Composable
-    fun Upright(text: CharSequence) = withSpan(TextOrientationSpan.Upright(), { this.text(text) })
+    fun sideways(text: CharSequence) = withSpan(TextOrientationSpan.Sideways()) { this.text(text) }
 
-    @Composable
-    fun TateChuYoko(text: CharSequence) =
-        withSpan(TextOrientationSpan.TextCombineUpright(), { this.text(text) })
+    fun upright(text: CharSequence) = withSpan(TextOrientationSpan.Upright()) { this.text(text) }
 
-    @Composable
-    fun <R : Any> ruby(ruby: CharSequence, block: @Composable VerticalTextBuilder.() -> R): R =
+    fun tateChuYoko(text: CharSequence) =
+        withSpan(TextOrientationSpan.TextCombineUpright()) { this.text(text) }
+
+    fun <R : Any> ruby(ruby: CharSequence, block: VerticalTextBuilder.() -> R): R =
         withSpan(RubySpan(ruby), block)
 
     fun text(text: CharSequence, rubyMap: Map<String, String> = emptyMap()) {
@@ -67,8 +65,7 @@ class VerticalTextBuilder {
         }
     }
 
-    @Composable
-    private fun <R : Any> withSpan(span: Any, block: @Composable VerticalTextBuilder.() -> R): R {
+    private fun <R : Any> withSpan(span: Any, block: VerticalTextBuilder.() -> R): R {
         val index = result.length
         val r = block(this)
         result.setSpan(span, index, result.length, SPAN_FLAG)
@@ -101,32 +98,31 @@ class VerticalTextBuilder {
         override fun updateDrawState(tp: TextPaint) = updateMeasureState(tp)
     }
 
-    @Composable
     fun <R : Any> withStyle(
         fontSize: TextUnit = TextUnit.Unspecified,
         textColor: Color = Color.Unspecified,
         backgroundColor: Color = Color.Unspecified,
-        block: @Composable VerticalTextBuilder.() -> R,
-    ): R =
-        withSpan(TextStyleSpan(fontSize, textColor, backgroundColor, LocalDensity.current), block)
+        block: VerticalTextBuilder.() -> R,
+    ): R = withSpan(TextStyleSpan(fontSize, textColor, backgroundColor, density), block)
 
-    @Composable
     fun <R : Any> withFontShear(
         fontShear: Float = DEFAULT_FONT_SHEAR,
-        block: @Composable VerticalTextBuilder.() -> R,
+        block: VerticalTextBuilder.() -> R,
     ): R = withSpan(FontShearSpan(fontShear), block)
 
-    @Composable
     fun <R : Any> withEmphasis(
         style: EmphasisStyle = EmphasisStyle.Dot,
         filled: Boolean = true,
         scale: Float = 0.5f,
-        block: @Composable VerticalTextBuilder.() -> R,
+        block: VerticalTextBuilder.() -> R,
     ): R = withSpan(EmphasisSpan(style, filled, scale = scale), block)
-
-    var result = SpannableStringBuilder()
 }
 
+fun buildVerticalText(
+    density: Density,
+    builder: VerticalTextBuilder.() -> Unit,
+): SpannableStringBuilder = VerticalTextBuilder(density).apply(builder).result
+
 @Composable
-fun buildVerticalText(builder: @Composable VerticalTextBuilder.() -> Unit): SpannableStringBuilder =
-    VerticalTextBuilder().apply { this.builder() }.result
+fun buildVerticalText(builder: VerticalTextBuilder.() -> Unit): SpannableStringBuilder =
+    buildVerticalText(LocalDensity.current, builder)

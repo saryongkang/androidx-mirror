@@ -41,7 +41,7 @@ public class VerticalTextLayout
  */
 @JvmOverloads
 constructor(
-    text: CharSequence = "",
+    text: CharSequence,
     start: Int = 0,
     end: Int = text.length,
     paint: TextPaint = TextPaint(),

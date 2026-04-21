@@ -52,10 +52,11 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.text.vertical.EmphasisStyle
-import androidx.text.vertical.VerticalTextLayout
+import androidx.text.vertical.compose.VerticalText
 import java.util.Locale
 
 class VerticalTextSampleActivity : ComponentActivity() {
@@ -138,30 +139,6 @@ fun ZoomableVerticalText(content: @Composable (TextPaint) -> Unit) {
 }
 
 @Composable
-fun VerticalText(text: Spanned, paint: TextPaint, modifier: Modifier = Modifier) {
-    var vTextLayout by remember { mutableStateOf<VerticalTextLayout?>(null) }
-    Layout(
-        modifier =
-            modifier.fillMaxSize().drawWithContent {
-                drawIntoCanvas { c ->
-                    vTextLayout?.draw(c.nativeCanvas, c.nativeCanvas.width.toFloat(), 0f)
-                }
-            },
-        content = {},
-    ) { _, constraints ->
-        vTextLayout =
-            VerticalTextLayout(
-                text = text,
-                start = 0,
-                end = text.length,
-                paint = paint,
-                height = constraints.maxHeight.toFloat(),
-            )
-        layout(constraints.maxWidth, constraints.maxHeight) {}
-    }
-}
-
-@Composable
 fun LegacyHorizontalText(text: Spanned, paint: TextPaint, modifier: Modifier = Modifier) {
     var hTextLayout by remember { mutableStateOf<Layout?>(null) }
     Layout(
@@ -179,29 +156,33 @@ fun LegacyHorizontalText(text: Spanned, paint: TextPaint, modifier: Modifier = M
 
 @Composable
 fun LongText(paint: TextPaint, modifier: Modifier = Modifier) {
-    VerticalText(makeSampleText(), paint, modifier)
+    val density = LocalDensity.current
+    val text = remember(density) { makeSampleText(density) }
+    VerticalText(text, paint, modifier)
 }
 
 @Composable
 fun LongHorizontalText(paint: TextPaint, modifier: Modifier = Modifier) {
-    LegacyHorizontalText(makeSampleText(), paint, modifier)
+    val density = LocalDensity.current
+    val text = remember(density) { makeSampleText(density) }
+    LegacyHorizontalText(text, paint, modifier)
 }
 
 @Composable
 fun ComplexHorizontalText(paint: TextPaint, modifier: Modifier = Modifier) {
-    LegacyHorizontalText(
-        buildVerticalText {
-            withEmphasis { text("傍点も") }
-            text("Support")
-            withEmphasis(EmphasisStyle.Sesame) { text("されてます。") }
-        },
-        paint,
-        modifier,
-    )
+    val density = LocalDensity.current
+    val text =
+        remember(density) {
+            buildVerticalText(density) {
+                withEmphasis { text("傍点も") }
+                text("Support")
+                withEmphasis(EmphasisStyle.Sesame) { text("されてます。") }
+            }
+        }
+    LegacyHorizontalText(text, paint, modifier)
 }
 
-@Composable
-fun makeSampleText() = buildVerticalText {
+fun makeSampleText(density: Density) = buildVerticalText(density) {
     text("吾輩は猫である。", mapOf("吾輩" to "わがはい", "猫" to "ねこ"))
     text("名前はまだ無い。", mapOf("名前" to "なまえ", "無" to "な"))
     text("\n")
@@ -225,59 +206,60 @@ fun makeSampleText() = buildVerticalText {
 
 @Composable
 fun ComplexText(paint: TextPaint, modifier: Modifier = Modifier) {
-    VerticalText(
-        buildVerticalText {
-            Upright("2024")
-            text("年の")
-            ruby("クリスマス") {
-                TateChuYoko("12")
-                text("月")
-                TateChuYoko("25")
-                text("日")
-            }
-            text("に")
-            Sideways("Google Pixel")
-            text("を買う。\n")
-
-            Upright("2024")
-            text("年は")
-            TateChuYoko("2024")
-            text("年ともかけるし")
-            Sideways("2024年")
-            text("ともかけるよ。\n")
-
-            text("もちろん")
-            withStyle(textColor = Color.Red) {
-                ruby(
-                    buildVerticalText {
-                        text("インライン")
-                        withStyle(fontSize = 1.5.em) { text("スタイリング") }
-                    }
-                ) {
-                    withStyle(fontSize = 0.8.em) { Sideways("inline ") }
-                    withStyle(backgroundColor = Color.Green) { Sideways("styling") }
-                }
-                withStyle(backgroundColor = Color.LightGray) {
-                    text("も")
-                    withStyle(fontSize = 2.em) { text("可能") }
-                    text("です。\n")
-                }
-            }
-
-            TateChuYoko(
-                buildVerticalText { // Tate Chu Yoko only respect styling.
-                    text("2")
-                    withStyle(backgroundColor = Color.Red) { text("0") }
-                    withStyle(backgroundColor = Color.Green) { text("2") }
-                    text("5")
-                }
-            )
-            text("年もよろしくお願いいたします。")
-
-            withFontShear { text("日本語の斜体はEnglishのItalicとは少し違います。") }
-            withEmphasis { text("傍点もSupportされてます。") }
-        },
-        paint,
-        modifier,
-    )
+    val density = LocalDensity.current
+    val text = remember(density) { buildComplexText(density) }
+    VerticalText(text, paint, modifier)
 }
+
+private fun buildComplexText(density: Density) =
+    buildVerticalText(density) {
+        upright("2024")
+        text("年の")
+        ruby("クリスマス") {
+            tateChuYoko("12")
+            text("月")
+            tateChuYoko("25")
+            text("日")
+        }
+        text("に")
+        sideways("Google Pixel")
+        text("を買う。\n")
+
+        upright("2024")
+        text("年は")
+        tateChuYoko("2024")
+        text("年ともかけるし")
+        sideways("2024年")
+        text("ともかけるよ。\n")
+
+        text("もちろん")
+        withStyle(textColor = Color.Red) {
+            ruby(
+                buildVerticalText(density) {
+                    text("インライン")
+                    withStyle(fontSize = 1.5.em) { text("スタイリング") }
+                }
+            ) {
+                withStyle(fontSize = 0.8.em) { sideways("inline ") }
+                withStyle(backgroundColor = Color.Green) { sideways("styling") }
+            }
+            withStyle(backgroundColor = Color.LightGray) {
+                text("も")
+                withStyle(fontSize = 2.em) { text("可能") }
+                text("です。\n")
+            }
+        }
+
+        tateChuYoko(
+            buildVerticalText(density) { // Tate Chu Yoko only respect styling.
+                text("2")
+                withStyle(backgroundColor = Color.Red) { text("0") }
+                withStyle(backgroundColor = Color.Green) { text("2") }
+                text("5")
+            }
+        )
+        text("年もよろしくお願いいたします。")
+
+        withFontShear { text("日本語の斜体はEnglishのItalicとは少し違います。") }
+        withEmphasis { text("傍点もSupportされてます。") }
+    }
